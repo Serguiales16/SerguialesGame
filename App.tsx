@@ -333,17 +333,18 @@ function App() {
                     </div>
 
                     {/* User Info & Logout */}
-                    <div className="hidden sm:flex items-center gap-3">
-                        <div className="text-right">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="text-right hidden sm:block">
                             <p className="text-xs text-gray-400">Usuario</p>
                             <p className="text-sm font-bold text-white">{currentUser}</p>
                         </div>
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 rounded-lg text-gray-400 hover:text-white transition-all text-xs font-medium"
+                            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 rounded-lg text-gray-400 hover:text-white transition-all text-xs font-medium"
                             title="Cerrar sesión"
                         >
                             <LogOut size={16} />
+                            <span className="hidden sm:inline">Salir</span>
                         </button>
                     </div>
 
