@@ -5,6 +5,7 @@ import { getCurrentUser, logout as authLogout } from './services/authService';
 import { LoginScreen } from './components/LoginScreen';
 import { GameCard } from './components/GameCard';
 import { IdeaCard } from './components/IdeaCard';
+import { IdeaDetailModal } from './components/IdeaDetailModal';
 import { AppCard } from './components/AppCard';
 import { LearningCard } from './components/LearningCard';
 import { GameDetailView } from './components/GameDetailView';
@@ -71,6 +72,7 @@ function App() {
     const [newIdeaTitle, setNewIdeaTitle] = useState('');
     const [newIdeaDesc, setNewIdeaDesc] = useState('');
     const [newIdeaTags, setNewIdeaTags] = useState('');
+    const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
 
     // --- Apps State ---
     const [apps, setApps] = useState<AppProject[]>([]);
@@ -146,6 +148,7 @@ function App() {
         setIdeas([newIdea, ...ideas]);
         setNewIdeaTitle(''); setNewIdeaDesc(''); setNewIdeaTags(''); setIsAddingIdea(false);
     };
+    const updateIdea = (updatedIdea: Idea) => setIdeas(prev => prev.map(i => i.id === updatedIdea.id ? updatedIdea : i));
     const deleteIdea = (id: string) => setIdeas(prev => prev.filter(i => i.id !== id));
 
     // --- Handlers: Apps ---
@@ -356,8 +359,18 @@ function App() {
                                     </form>
                                 </div>
                             )}
-                            {ideas.map(idea => <IdeaCard key={idea.id} idea={idea} onDelete={deleteIdea} />)}
+                            {ideas.map(idea => <IdeaCard key={idea.id} idea={idea} onDelete={deleteIdea} onClick={(i) => setSelectedIdeaId(i.id)} />)}
                         </div>
+
+                        {/* Idea Detail Modal */}
+                        {selectedIdeaId && (
+                            <IdeaDetailModal
+                                idea={ideas.find(i => i.id === selectedIdeaId)!}
+                                onClose={() => setSelectedIdeaId(null)}
+                                onUpdate={updateIdea}
+                                onDelete={deleteIdea}
+                            />
+                        )}
                     </div>
                 )}
 
