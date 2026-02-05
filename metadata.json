@@ -1,0 +1,5 @@
+{
+  "name": "SerguialesGame",
+  "description": "Una aplicación avanzada de gestión de videojuegos y progreso personal con asistencia de IA para recordar dónde lo dejaste y planificar sesiones.",
+  "requestFramePermissions": []
+}
