@@ -320,7 +320,17 @@ function App() {
                     <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
                         <div
                             className="flex items-center gap-3 cursor-pointer group"
-                            onClick={() => { if (activeTab === 'games') { setView('dashboard'); setSelectedGameId(null); } }}
+                            onClick={(e) => {
+                                // Mobile: logout, Desktop: go to dashboard
+                                if (window.innerWidth < 640) {
+                                    handleLogout();
+                                } else {
+                                    if (activeTab === 'games') {
+                                        setView('dashboard');
+                                        setSelectedGameId(null);
+                                    }
+                                }
+                            }}
                         >
                             <div className={`group-hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] transition-all duration-300`}>
                                 <AppLogo color={t.color} />
