@@ -316,21 +316,12 @@ function App() {
             <header className="sticky top-0 z-50 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 transition-colors duration-500">
                 <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
 
-                    {/* Logo + Logout (mobile) */}
+                    {/* Logo - Click to Logout */}
                     <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
                         <div
                             className="flex items-center gap-3 cursor-pointer group"
-                            onClick={(e) => {
-                                // Mobile: logout, Desktop: go to dashboard
-                                if (window.innerWidth < 640) {
-                                    handleLogout();
-                                } else {
-                                    if (activeTab === 'games') {
-                                        setView('dashboard');
-                                        setSelectedGameId(null);
-                                    }
-                                }
-                            }}
+                            onClick={handleLogout}
+                            title="Click para cerrar sesión"
                         >
                             <div className={`group-hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] transition-all duration-300`}>
                                 <AppLogo color={t.color} />
@@ -342,15 +333,6 @@ function App() {
                                 <p className="text-[10px] text-gray-500 font-medium tracking-wider uppercase">Personal Hub</p>
                             </div>
                         </div>
-
-                        {/* Logout button - next to logo on mobile, far right on desktop */}
-                        <button
-                            onClick={handleLogout}
-                            className="flex sm:hidden items-center gap-1 px-2 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 rounded-lg text-gray-400 hover:text-white transition-all text-xs font-medium"
-                            title="Cerrar sesión"
-                        >
-                            <LogOut size={16} />
-                        </button>
                     </div>
 
                     {/* User Info & Logout (desktop only) */}
@@ -394,7 +376,7 @@ function App() {
                         })}
                     </div>
                 </div>
-            </header>
+            </header >
 
             <main className="max-w-6xl mx-auto px-4 py-8">
 
@@ -570,7 +552,7 @@ function App() {
                 )}
 
             </main>
-        </div>
+        </div >
     );
 }
 
