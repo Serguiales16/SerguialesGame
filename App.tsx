@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Game, GameStatus, Idea, AppProject, LearningItem } from './types';
-import { loadGames, saveGames, loadIdeas, saveIdeas, loadApps, saveApps, loadLearning, saveLearning } from './services/storageService';
-import { getCurrentUser, logout as authLogout } from './services/authService';
+import { loadGames, saveGame, deleteGame as deleteGameDB, loadIdeas, saveIdea, deleteIdea as deleteIdeaDB, loadApps, saveApp, deleteApp as deleteAppDB, loadLearning, saveLearning, deleteLearning as deleteLearningDB } from './services/storageService';
+import { getCurrentUser, logout as authLogout, onAuthStateChange } from './services/authService';
 import { LoginScreen } from './components/LoginScreen';
 import { GameCard } from './components/GameCard';
 import { IdeaCard } from './components/IdeaCard';
@@ -52,6 +52,7 @@ function App() {
     // --- Auth State ---
     const [currentUser, setCurrentUser] = useState<string | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [activeTab, setActiveTab] = useState<Tab>('games');
     const t = getThemeConfig(activeTab);
@@ -90,36 +91,64 @@ function App() {
     const [newLearnStatus, setNewLearnStatus] = useState<'To Learn' | 'Learning' | 'Mastered'>('Learning');
 
     // --- Effects ---
-    // Check authentication on mount
+    // Check authentication on mount and listen to auth changes
     useEffect(() => {
-        const user = getCurrentUser();
-        if (user) {
+        const initAuth = async () => {
+            const user = await getCurrentUser();
+            if (user) {
+                setCurrentUser(user);
+                setIsAuthenticated(true);
+            }
+            setIsLoading(false);
+        };
+
+        initAuth();
+
+        // Listen to auth state changes (login/logout from other tabs, etc)
+        const { data: authListener } = onAuthStateChange(async (user) => {
             setCurrentUser(user);
-            setIsAuthenticated(true);
-        }
+            setIsAuthenticated(!!user);
+            if (!user) {
+                // Clear data on logout
+                setGames([]);
+                setIdeas([]);
+                setApps([]);
+                setLearnItems([]);
+            }
+        });
+
+        return () => {
+            authListener?.subscription?.unsubscribe();
+        };
     }, []);
 
     // Load user data when authenticated
     useEffect(() => {
-        if (currentUser) {
-            setGames(loadGames(currentUser));
-            setIdeas(loadIdeas(currentUser));
-            setApps(loadApps(currentUser));
-            setLearnItems(loadLearning(currentUser));
-        }
-    }, [currentUser]);
+        if (isAuthenticated && currentUser) {
+            const loadData = async () => {
+                const [gamesData, ideasData, appsData, learnData] = await Promise.all([
+                    loadGames(),
+                    loadIdeas(),
+                    loadApps(),
+                    loadLearning()
+                ]);
 
-    useEffect(() => { if (games.length > 0 && currentUser) saveGames(currentUser, games); }, [games, currentUser]);
-    useEffect(() => { if (ideas.length > 0 && currentUser) saveIdeas(currentUser, ideas); }, [ideas, currentUser]);
-    useEffect(() => { if (apps.length > 0 && currentUser) saveApps(currentUser, apps); }, [apps, currentUser]);
-    useEffect(() => { if (learnItems.length > 0 && currentUser) saveLearning(currentUser, learnItems); }, [learnItems, currentUser]);
+                setGames(gamesData);
+                setIdeas(ideasData);
+                setApps(appsData);
+                setLearnItems(learnData);
+            };
+
+            loadData();
+        }
+    }, [isAuthenticated, currentUser]);
 
     // --- Handlers: Games ---
-    const handleCreateGame = (e: React.FormEvent) => {
+    const handleCreateGame = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newTitle.trim()) return;
         const newGame: Game = {
-            id: Date.now().toString(),
+            id: crypto.randomUUID(),
             title: newTitle,
             platform: newPlatform || 'PC',
             status: GameStatus.PLAYING,
@@ -127,73 +156,128 @@ function App() {
             sessions: [],
             notes: ''
         };
-        setGames([newGame, ...games]);
-        setNewTitle(''); setNewPlatform(''); setIsAddingGame(false); setStatusFilter('ALL');
+
+        // Save to Supabase
+        const success = await saveGame(newGame);
+        if (success) {
+            setGames([newGame, ...games]);
+            setNewTitle(''); setNewPlatform(''); setIsAddingGame(false); setStatusFilter('ALL');
+        }
     };
-    const updateGame = (updatedGame: Game) => setGames(prev => prev.map(g => g.id === updatedGame.id ? updatedGame : g));
-    const deleteGame = (id: string) => { setGames(prev => prev.filter(g => g.id !== id)); setView('dashboard'); setSelectedGameId(null); };
+
+    const updateGame = async (updatedGame: Game) => {
+        const success = await saveGame(updatedGame);
+        if (success) {
+            setGames(prev => prev.map(g => g.id === updatedGame.id ? updatedGame : g));
+        }
+    };
+
+    const deleteGameHandler = async (id: string) => {
+        const success = await deleteGameDB(id);
+        if (success) {
+            setGames(prev => prev.filter(g => g.id !== id));
+            setView('dashboard');
+            setSelectedGameId(null);
+        }
+    };
 
     // --- Handlers: Ideas ---
-    const handleCreateIdea = (e: React.FormEvent) => {
+    const handleCreateIdea = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newIdeaTitle.trim()) return;
         const newIdea: Idea = {
-            id: Date.now().toString(),
+            id: crypto.randomUUID(),
             title: newIdeaTitle,
             description: newIdeaDesc,
             createdAt: new Date().toISOString(),
             tags: newIdeaTags.split(',').map(t => t.trim()).filter(t => t.length > 0),
             priority: 'medium'
         };
-        setIdeas([newIdea, ...ideas]);
-        setNewIdeaTitle(''); setNewIdeaDesc(''); setNewIdeaTags(''); setIsAddingIdea(false);
+
+        const success = await saveIdea(newIdea);
+        if (success) {
+            setIdeas([newIdea, ...ideas]);
+            setNewIdeaTitle(''); setNewIdeaDesc(''); setNewIdeaTags(''); setIsAddingIdea(false);
+        }
     };
-    const updateIdea = (updatedIdea: Idea) => setIdeas(prev => prev.map(i => i.id === updatedIdea.id ? updatedIdea : i));
-    const deleteIdea = (id: string) => setIdeas(prev => prev.filter(i => i.id !== id));
+
+    const updateIdea = async (updatedIdea: Idea) => {
+        const success = await saveIdea(updatedIdea);
+        if (success) {
+            setIdeas(prev => prev.map(i => i.id === updatedIdea.id ? updatedIdea : i));
+        }
+    };
+
+    const deleteIdeaHandler = async (id: string) => {
+        const success = await deleteIdeaDB(id);
+        if (success) {
+            setIdeas(prev => prev.filter(i => i.id !== id));
+        }
+    };
 
     // --- Handlers: Apps ---
-    const handleCreateApp = (e: React.FormEvent) => {
+    const handleCreateApp = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newAppName.trim()) return;
         const newApp: AppProject = {
-            id: Date.now().toString(),
+            id: crypto.randomUUID(),
             name: newAppName,
             description: newAppDesc,
             url: newAppUrl.trim() || undefined,
             techStack: newAppStack.split(',').map(t => t.trim()).filter(t => t.length > 0),
             status: 'Development'
         };
-        setApps([newApp, ...apps]);
-        setNewAppName(''); setNewAppDesc(''); setNewAppUrl(''); setNewAppStack(''); setIsAddingApp(false);
+
+        const success = await saveApp(newApp);
+        if (success) {
+            setApps([newApp, ...apps]);
+            setNewAppName(''); setNewAppDesc(''); setNewAppUrl(''); setNewAppStack(''); setIsAddingApp(false);
+        }
     }
-    const deleteApp = (id: string) => setApps(prev => prev.filter(a => a.id !== id));
+
+    const deleteAppHandler = async (id: string) => {
+        const success = await deleteAppDB(id);
+        if (success) {
+            setApps(prev => prev.filter(a => a.id !== id));
+        }
+    };
 
     // --- Handlers: Learn ---
-    const handleCreateLearn = (e: React.FormEvent) => {
+    const handleCreateLearn = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newLearnTopic.trim()) return;
         const newItem: LearningItem = {
-            id: Date.now().toString(),
+            id: crypto.randomUUID(),
             topic: newLearnTopic,
             category: newLearnCat,
             status: newLearnStatus
         };
-        setLearnItems([newItem, ...learnItems]);
-        setNewLearnTopic(''); setIsAddingLearn(false);
+
+        const success = await saveLearning(newItem);
+        if (success) {
+            setLearnItems([newItem, ...learnItems]);
+            setNewLearnTopic(''); setIsAddingLearn(false);
+        }
     }
-    const deleteLearn = (id: string) => setLearnItems(prev => prev.filter(l => l.id !== id));
+
+    const deleteLearningHandler = async (id: string) => {
+        const success = await deleteLearningDB(id);
+        if (success) {
+            setLearnItems(prev => prev.filter(l => l.id !== id));
+        }
+    };
 
     // --- Handlers: Auth ---
-    const handleLoginSuccess = () => {
-        const user = getCurrentUser();
+    const handleLoginSuccess = async () => {
+        const user = await getCurrentUser();
         if (user) {
             setCurrentUser(user);
             setIsAuthenticated(true);
         }
     };
 
-    const handleLogout = () => {
-        authLogout();
+    const handleLogout = async () => {
+        await authLogout();
         setCurrentUser(null);
         setIsAuthenticated(false);
         setGames([]);
@@ -201,6 +285,18 @@ function App() {
         setApps([]);
         setLearnItems([]);
     };
+
+    // Show loading state
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+                    <p className="text-gray-400">Cargando...</p>
+                </div>
+            </div>
+        );
+    }
 
     // Show login screen if not authenticated
     if (!isAuthenticated) {
@@ -331,7 +427,7 @@ function App() {
                                 </div>
                             </div>
                         )}
-                        {view === 'detail' && selectedGameId && <GameDetailView game={games.find(g => g.id === selectedGameId)!} onBack={() => { setView('dashboard'); setSelectedGameId(null); }} onUpdateGame={updateGame} onDeleteGame={deleteGame} />}
+                        {view === 'detail' && selectedGameId && <GameDetailView game={games.find(g => g.id === selectedGameId)!} onBack={() => { setView('dashboard'); setSelectedGameId(null); }} onUpdateGame={updateGame} onDeleteGame={deleteGameHandler} />}
                     </>
                 )}
 
@@ -359,7 +455,7 @@ function App() {
                                     </form>
                                 </div>
                             )}
-                            {ideas.map(idea => <IdeaCard key={idea.id} idea={idea} onDelete={deleteIdea} onClick={(i) => setSelectedIdeaId(i.id)} />)}
+                            {ideas.map(idea => <IdeaCard key={idea.id} idea={idea} onDelete={deleteIdeaHandler} onClick={(i) => setSelectedIdeaId(i.id)} />)}
                         </div>
 
                         {/* Idea Detail Modal */}
@@ -368,7 +464,7 @@ function App() {
                                 idea={ideas.find(i => i.id === selectedIdeaId)!}
                                 onClose={() => setSelectedIdeaId(null)}
                                 onUpdate={updateIdea}
-                                onDelete={deleteIdea}
+                                onDelete={deleteIdeaHandler}
                             />
                         )}
                     </div>
@@ -403,7 +499,7 @@ function App() {
                                     </form>
                                 </div>
                             )}
-                            {apps.map(app => <AppCard key={app.id} app={app} onDelete={deleteApp} />)}
+                            {apps.map(app => <AppCard key={app.id} app={app} onDelete={deleteAppHandler} />)}
                         </div>
                     </div>
                 )}
@@ -446,7 +542,7 @@ function App() {
                                     </form>
                                 </div>
                             )}
-                            {learnItems.map(item => <LearningCard key={item.id} item={item} onDelete={deleteLearn} />)}
+                            {learnItems.map(item => <LearningCard key={item.id} item={item} onDelete={deleteLearningHandler} />)}
                         </div>
                     </div>
                 )}

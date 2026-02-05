@@ -13,13 +13,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setSuccess('');
 
         if (isLogin) {
-            const result = login(username, password);
+            const result = await login(username, password);
             if (result.success) {
                 setSuccess(result.message);
                 setTimeout(() => {
@@ -29,7 +29,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 setError(result.message);
             }
         } else {
-            const result = register(username, password);
+            const result = await register(username, password);
             if (result.success) {
                 setSuccess(result.message);
                 setTimeout(() => {
@@ -64,8 +64,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                         <button
                             onClick={() => { setIsLogin(true); setError(''); setSuccess(''); }}
                             className={`flex-1 py-2 rounded-md text-sm font-bold transition-all flex items-center justify-center gap-2 ${isLogin
-                                    ? 'bg-primary-600 text-white shadow-lg'
-                                    : 'text-gray-400 hover:text-gray-200'
+                                ? 'bg-primary-600 text-white shadow-lg'
+                                : 'text-gray-400 hover:text-gray-200'
                                 }`}
                         >
                             <LogIn size={16} /> Iniciar Sesión
@@ -73,8 +73,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                         <button
                             onClick={() => { setIsLogin(false); setError(''); setSuccess(''); }}
                             className={`flex-1 py-2 rounded-md text-sm font-bold transition-all flex items-center justify-center gap-2 ${!isLogin
-                                    ? 'bg-primary-600 text-white shadow-lg'
-                                    : 'text-gray-400 hover:text-gray-200'
+                                ? 'bg-primary-600 text-white shadow-lg'
+                                : 'text-gray-400 hover:text-gray-200'
                                 }`}
                         >
                             <UserPlus size={16} /> Registrarse
@@ -161,7 +161,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
                 {/* Footer Note */}
                 <p className="text-center text-gray-600 text-xs mt-6">
-                    Los datos se almacenan localmente en tu navegador
+                    Los datos se sincronizan en la nube 🔄
                 </p>
             </div>
         </div>
