@@ -316,35 +316,46 @@ function App() {
             <header className="sticky top-0 z-50 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 transition-colors duration-500">
                 <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
 
-                    {/* Logo */}
-                    <div
-                        className="flex items-center gap-3 cursor-pointer group self-start sm:self-center"
-                        onClick={() => { if (activeTab === 'games') { setView('dashboard'); setSelectedGameId(null); } }}
-                    >
-                        <div className={`group-hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] transition-all duration-300`}>
-                            <AppLogo color={t.color} />
+                    {/* Logo + Logout (mobile) */}
+                    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                        <div
+                            className="flex items-center gap-3 cursor-pointer group"
+                            onClick={() => { if (activeTab === 'games') { setView('dashboard'); setSelectedGameId(null); } }}
+                        >
+                            <div className={`group-hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] transition-all duration-300`}>
+                                <AppLogo color={t.color} />
+                            </div>
+                            <div>
+                                <h1 className="font-bold text-xl tracking-tight text-white leading-none group-hover:text-gray-200 transition-colors">
+                                    Serguiales<span className={`${t.primary} transition-colors duration-500`}>{t.text}</span>
+                                </h1>
+                                <p className="text-[10px] text-gray-500 font-medium tracking-wider uppercase">Personal Hub</p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="font-bold text-xl tracking-tight text-white leading-none group-hover:text-gray-200 transition-colors">
-                                Serguiales<span className={`${t.primary} transition-colors duration-500`}>{t.text}</span>
-                            </h1>
-                            <p className="text-[10px] text-gray-500 font-medium tracking-wider uppercase">Personal Hub</p>
-                        </div>
+
+                        {/* Logout button - next to logo on mobile, far right on desktop */}
+                        <button
+                            onClick={handleLogout}
+                            className="flex sm:hidden items-center gap-1 px-2 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 rounded-lg text-gray-400 hover:text-white transition-all text-xs font-medium"
+                            title="Cerrar sesión"
+                        >
+                            <LogOut size={16} />
+                        </button>
                     </div>
 
-                    {/* User Info & Logout */}
-                    <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="text-right hidden sm:block">
+                    {/* User Info & Logout (desktop only) */}
+                    <div className="hidden sm:flex items-center gap-3">
+                        <div className="text-right">
                             <p className="text-xs text-gray-400">Usuario</p>
                             <p className="text-sm font-bold text-white">{currentUser}</p>
                         </div>
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 rounded-lg text-gray-400 hover:text-white transition-all text-xs font-medium"
+                            className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 rounded-lg text-gray-400 hover:text-white transition-all text-xs font-medium"
                             title="Cerrar sesión"
                         >
                             <LogOut size={16} />
-                            <span className="hidden sm:inline">Salir</span>
+                            <span>Salir</span>
                         </button>
                     </div>
 
