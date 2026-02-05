@@ -1,14 +1,15 @@
 import { Game, Idea, AppProject, LearningItem } from '../types';
 
-const GAMES_STORAGE_KEY = 'serguiales_games_v1';
-const IDEAS_STORAGE_KEY = 'serguiales_ideas_v1';
-const APPS_STORAGE_KEY = 'serguiales_apps_v1';
-const LEARN_STORAGE_KEY = 'serguiales_learn_v1';
+// Helper to get user-specific storage keys
+const getGamesKey = (username: string) => `serguiales_games_${username}`;
+const getIdeasKey = (username: string) => `serguiales_ideas_${username}`;
+const getAppsKey = (username: string) => `serguiales_apps_${username}`;
+const getLearnKey = (username: string) => `serguiales_learn_${username}`;
 
 // Games
-export const loadGames = (): Game[] => {
+export const loadGames = (username: string): Game[] => {
   try {
-    const data = localStorage.getItem(GAMES_STORAGE_KEY);
+    const data = localStorage.getItem(getGamesKey(username));
     return data ? JSON.parse(data) : [];
   } catch (e) {
     console.error("Error loading games", e);
@@ -16,18 +17,18 @@ export const loadGames = (): Game[] => {
   }
 };
 
-export const saveGames = (games: Game[]) => {
+export const saveGames = (username: string, games: Game[]) => {
   try {
-    localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify(games));
+    localStorage.setItem(getGamesKey(username), JSON.stringify(games));
   } catch (e) {
     console.error("Error saving games", e);
   }
 };
 
 // Ideas
-export const loadIdeas = (): Idea[] => {
+export const loadIdeas = (username: string): Idea[] => {
   try {
-    const data = localStorage.getItem(IDEAS_STORAGE_KEY);
+    const data = localStorage.getItem(getIdeasKey(username));
     return data ? JSON.parse(data) : [];
   } catch (e) {
     console.error("Error loading ideas", e);
@@ -35,18 +36,18 @@ export const loadIdeas = (): Idea[] => {
   }
 };
 
-export const saveIdeas = (ideas: Idea[]) => {
+export const saveIdeas = (username: string, ideas: Idea[]) => {
   try {
-    localStorage.setItem(IDEAS_STORAGE_KEY, JSON.stringify(ideas));
+    localStorage.setItem(getIdeasKey(username), JSON.stringify(ideas));
   } catch (e) {
     console.error("Error saving ideas", e);
   }
 };
 
 // Apps
-export const loadApps = (): AppProject[] => {
+export const loadApps = (username: string): AppProject[] => {
   try {
-    const data = localStorage.getItem(APPS_STORAGE_KEY);
+    const data = localStorage.getItem(getAppsKey(username));
     return data ? JSON.parse(data) : [];
   } catch (e) {
     console.error("Error loading apps", e);
@@ -54,18 +55,18 @@ export const loadApps = (): AppProject[] => {
   }
 };
 
-export const saveApps = (apps: AppProject[]) => {
+export const saveApps = (username: string, apps: AppProject[]) => {
   try {
-    localStorage.setItem(APPS_STORAGE_KEY, JSON.stringify(apps));
+    localStorage.setItem(getAppsKey(username), JSON.stringify(apps));
   } catch (e) {
     console.error("Error saving apps", e);
   }
 };
 
 // Learning
-export const loadLearning = (): LearningItem[] => {
+export const loadLearning = (username: string): LearningItem[] => {
   try {
-    const data = localStorage.getItem(LEARN_STORAGE_KEY);
+    const data = localStorage.getItem(getLearnKey(username));
     return data ? JSON.parse(data) : [];
   } catch (e) {
     console.error("Error loading learning items", e);
@@ -73,9 +74,9 @@ export const loadLearning = (): LearningItem[] => {
   }
 };
 
-export const saveLearning = (items: LearningItem[]) => {
+export const saveLearning = (username: string, items: LearningItem[]) => {
   try {
-    localStorage.setItem(LEARN_STORAGE_KEY, JSON.stringify(items));
+    localStorage.setItem(getLearnKey(username), JSON.stringify(items));
   } catch (e) {
     console.error("Error saving learning items", e);
   }

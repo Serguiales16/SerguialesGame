@@ -56,3 +56,15 @@ export interface AIResponse {
   text: string;
   actions?: string[];
 }
+
+// Authentication Types
+export interface User {
+  username: string;
+  password: string; // Plain text (solo para uso local)
+  createdAt: string;
+}
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  currentUser: string | null;
+}
